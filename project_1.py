@@ -1,14 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from scipy.fft import fft2, ifft2, fftshift
+from scipy.fft import fft2, ifft2, fftshift, ifftshift
 import scipy
 import skimage
 import cv2 as cv
 
 
 # ============================================================
-# Question 2.1.1
+# Section 2.1
 # ============================================================
 def question_2_1_1():
     # ------------------------------
@@ -98,9 +98,6 @@ def question_2_1_1():
     plt.show()
 
 
-# ============================================================
-# Question 2.1.2
-# ============================================================
 def question_2_1_2():
     # ------------------------------
     # Parameters
@@ -172,9 +169,6 @@ def question_2_1_2():
     plt.show()
 
 
-# ============================================================
-# Question 2.1.3
-# ============================================================
 def question_2_1_3():
     # ------------------------------
     # Parameters
@@ -225,9 +219,6 @@ def question_2_1_3():
     plt.show()
 
 
-# ============================================================
-# Question 2.1.4
-# ============================================================
 def question_2_1_4():
     # ------------------------------
     # Parameters
@@ -279,7 +270,7 @@ def question_2_1_4():
 
 
 # ============================================================
-# Question 2.2.1
+# Question 2.2
 # ============================================================
 def question_2_2():
     # ------------------------------
@@ -294,12 +285,18 @@ def question_2_2():
 
     # Square
     square = np.zeros(image_shape, dtype=np.float64)
-    square[256 - rows // 8 : 256 + rows // 8] = 1
-    
+    square[
+        256 - rows // 8 : 256 + rows // 8,
+        256 - cols // 8 : 256 + cols // 8
+    ] = 1
+
     # Rectangle
     rect = np.zeros(image_shape, dtype=np.float64)
-    rect[256 - rows // 16 : 256 + rows // 8] = 1
-    
+    rect[
+        256 - rows // 16 : 256 + rows // 16,
+        256 - cols // 8  : 256 + cols // 8
+    ] = 1
+
     # Circle
     circ = np.zeros(image_shape, dtype=np.double)
     center = (rows // 2, cols // 2)
@@ -307,61 +304,154 @@ def question_2_2():
 
     rr, cc = skimage.draw.disk(center, radius, shape=circ.shape)
     circ[rr, cc] = 1
-    
+
     # Image
     image = cv.imread("water_tv.png", cv.IMREAD_GRAYSCALE)
-    
+
     # Crop image to square
-    image = image[256:768, 512:1024].astype(np.float64)
-    
+    image = image[256:768, 200:200+512].astype(np.float64)
+
     # ------------------------------
     # Low pass filters
     # ------------------------------
-    
-    r1 = rows // 2  # Half image
-    r2 = rows // 8  # Eigth image
-    r3 = rows // 32 # 32nd image
 
-    rr_1, cc_1 = skimage.draw.disk(center, r1)
-    rr_2, cc_2 = skimage.draw.disk(center, r2)
-    rr_3, cc_3 = skimage.draw.disk(center, r3)
-    
+    r1 = rows // 2   # Half image
+    r2 = rows // 8   # Eigth image
+    r3 = rows // 32  # 32nd image
+
+    rr_1, cc_1 = skimage.draw.disk(center, r1, shape=image_shape)
+    rr_2, cc_2 = skimage.draw.disk(center, r2, shape=image_shape)
+    rr_3, cc_3 = skimage.draw.disk(center, r3, shape=image_shape)
+
+    # list of filters
+    rrs_ccs = [(rr_1, cc_1), (rr_2, cc_2), (rr_3, cc_3)]
+
     # ------------------------------
     # 2D FFT's & power spectrum's
     # ------------------------------
-    square_freq = fft2(square)
-    rect_freq = fft2(rect)
-    circle_freq = fft2(circ)
-    image_freq = fft2(image)
-    
+
+    # FFT and shift
+    square_freq = fftshift(fft2(square))
+    rect_freq   = fftshift(fft2(rect))
+    circ_freq   = fftshift(fft2(circ))
+    image_freq  = fftshift(fft2(image))
+
+    # Power spectrum's (for display)
     square_power = np.abs(square_freq) ** 2
-    rect_power = np.abs(rect_freq) ** 2
-    circle_power = np.abs(circle_freq) ** 2
-    image_power = np.abs(image_freq) ** 2
-    
+    rect_power   = np.abs(rect_freq) ** 2
+    circ_power   = np.abs(circ_freq) ** 2
+    image_power  = np.abs(image_freq) ** 2
+
+    # Normalize
+    square_power /= square_power.max()
+    rect_power   /= rect_power.max()
+    circ_power   /= circ_power.max()
+    image_power  /= image_power.max()
+
     # ------------------------------
-    # Shift 0-frequency to center
+    # Enhance original for display
     # ------------------------------
-    
-    square_power = fftshift(square_power)
-    rect_power = fftshift(rect_power)
-    circle_power = fftshift(circle_power)
-    image_power = fftshift(image_power)
-    
-    # ------------------------------
-    # Apply Low-pass filters
-    # ------------------------------
-    
-    
-    # ------------------------------
-    # Inverse Transform
-    # ------------------------------
-    
-    # ------------------------------
-    # Display Reconstructed and Spectrum
-    # ------------------------------
-    
-    
+
+    square_power = np.power(square_power, 0.2)
+    rect_power   = np.power(rect_power, 0.2)
+    circ_power   = np.power(circ_power, 0.2)
+    image_power  = np.power(image_power, 0.2)
+
+    # Iterate through low-pass filters
+    for rr, cc in rrs_ccs:
+
+        # ------------------------------
+        # Apply Low-pass filters
+        # ------------------------------
+
+        # Create mask
+        mask = np.zeros(image_shape, dtype=np.float64)
+        mask[rr, cc] = 1
+
+        # Apply filter in frequency domain
+        square_freq_lp = square_freq * mask
+        rect_freq_lp   = rect_freq * mask
+        circ_freq_lp   = circ_freq * mask
+        image_freq_lp  = image_freq * mask
+
+        # Low-pass power spectrum's
+        square_power_lp = np.abs(square_freq_lp) ** 2
+        rect_power_lp   = np.abs(rect_freq_lp) ** 2
+        circ_power_lp   = np.abs(circ_freq_lp) ** 2
+        image_power_lp  = np.abs(image_freq_lp) ** 2
+
+        # Normalize
+        square_power_lp /= square_power_lp.max()
+        rect_power_lp   /= rect_power_lp.max()
+        circ_power_lp   /= circ_power_lp.max()
+        image_power_lp  /= image_power_lp.max()
+
+        # ------------------------------
+        # Inverse Transform
+        # ------------------------------
+
+        # Shift components back then ifft
+        square_recon = np.abs(ifft2(ifftshift(square_freq_lp)))
+        rect_recon   = np.abs(ifft2(ifftshift(rect_freq_lp)))
+        circ_recon   = np.abs(ifft2(ifftshift(circ_freq_lp)))
+        image_recon  = np.abs(ifft2(ifftshift(image_freq_lp)))
+
+        # ------------------------------
+        # Enhance low-pass for display
+        # ------------------------------
+
+        square_power_lp = np.power(square_power_lp, 0.2)
+        rect_power_lp   = np.power(rect_power_lp, 0.2)
+        circ_power_lp   = np.power(circ_power_lp, 0.2)
+        image_power_lp  = np.power(image_power_lp, 0.2)
+
+        # ------------------------------
+        # Display Reconstructed and Spectrum
+        # ------------------------------
+
+        # rows = orig, power, low-pass, reconstructed
+        # cols = square, rect, circ, image
+        fig, axes = plt.subplots(4, 4, figsize=(30, 25))
+
+        # Originals
+        axes[0,0].imshow(square, cmap=mpl.colormaps["gray"])
+        axes[0,1].imshow(rect, cmap=mpl.colormaps["gray"])
+        axes[0,2].imshow(circ, cmap=mpl.colormaps["gray"])
+        axes[0,3].imshow(image, cmap=mpl.colormaps["gray"])
+
+        # Original power spectrum
+        axes[1,0].imshow(square_power, cmap=mpl.colormaps["gray"])
+        axes[1,1].imshow(rect_power, cmap=mpl.colormaps["gray"])
+        axes[1,2].imshow(circ_power, cmap=mpl.colormaps["gray"])
+        axes[1,3].imshow(image_power, cmap=mpl.colormaps["gray"])
+
+        # Low-Pass power spectrum
+        axes[2,0].imshow(square_power_lp, cmap=mpl.colormaps["gray"])
+        axes[2,1].imshow(rect_power_lp, cmap=mpl.colormaps["gray"])
+        axes[2,2].imshow(circ_power_lp, cmap=mpl.colormaps["gray"])
+        axes[2,3].imshow(image_power_lp, cmap=mpl.colormaps["gray"])
+
+        # Reconstructed images
+        axes[3,0].imshow(square_recon, cmap=mpl.colormaps["gray"])
+        axes[3,1].imshow(rect_recon, cmap=mpl.colormaps["gray"])
+        axes[3,2].imshow(circ_recon, cmap=mpl.colormaps["gray"])
+        axes[3,3].imshow(image_recon, cmap=mpl.colormaps["gray"])
+
+        # Set titles
+        axes[0,0].set_title("Square", fontsize=20)
+        axes[0,1].set_title("Rect", fontsize=20)
+        axes[0,2].set_title("Circ", fontsize=20)
+        axes[0,3].set_title("Image", fontsize=20)
+
+        plt.tight_layout()
+        plt.show()
+
+
+# ============================================================
+# Question 2.3
+# ============================================================
+
+
 
 if __name__ == "__main__":
     question_2_2()
