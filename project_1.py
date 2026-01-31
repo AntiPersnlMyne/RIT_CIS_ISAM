@@ -8,9 +8,9 @@ import cv2 as cv
 
 
 # ============================================================
-# Question 2.1
+# Question 2.1.1
 # ============================================================
-def question_2_1():
+def question_2_1_1():
     # ------------------------------
     # Parameters
     # ------------------------------
@@ -69,6 +69,14 @@ def question_2_1():
     sin1_power = fftshift(sin1_power)
     sin2_power = fftshift(sin2_power)
 
+    # Normalize
+    sin1_power /= sin1_power.max()
+    sin2_power /= sin2_power.max()
+
+    # For visualization purposes ONLY
+    sin1_power = np.sqrt(sin1_power)
+    sin2_power = np.sqrt(sin2_power)
+
     # ------------------------------
     # Display sinusoids
     # ------------------------------
@@ -76,24 +84,24 @@ def question_2_1():
     # 2x2 grid
     _, axs = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(20, 10))
 
-    # Space domain 
+    # Space domain
     axs[0, 0].imshow(sin1, cmap=mpl.colormaps["gray"])
-    axs[0, 0].set_title("Sinusoid 0 deg", fontsize=20)
+    axs[0, 0].set_title("Sin1", fontsize=20)
     axs[1, 0].imshow(sin2, cmap=mpl.colormaps["gray"])
-    axs[1, 0].set_title("Sinusoid 45 deg", fontsize=20)
+    axs[1, 0].set_title("Sin2", fontsize=20)
 
-    # Frequency domain 
+    # Frequency domain
     axs[0, 1].imshow(sin1_power, cmap=mpl.colormaps["gray"])
-    axs[0, 1].set_title("Sinusoid 0 deg", fontsize=20)
+    axs[0, 1].set_title("Sin1 Spectrum", fontsize=20)
     axs[1, 1].imshow(sin2_power, cmap=mpl.colormaps["gray"])
-    axs[1, 1].set_title("Sinusoid 45 deg", fontsize=20)
+    axs[1, 1].set_title("Sin2 Spectrum", fontsize=20)
     plt.show()
 
 
 # ============================================================
-# Question 2.2
+# Question 2.1.2
 # ============================================================
-def question_2_2():
+def question_2_1_2():
     # ------------------------------
     # Parameters
     # ------------------------------
@@ -135,30 +143,39 @@ def question_2_2():
     rect1_power = fftshift(rect1_power)
     rect2_power = fftshift(rect2_power)
 
+    # Normalize
+    rect1_power /= rect1_power.max()
+    rect2_power /= rect2_power.max()
+
+    # For visualizaiton purposes ONLY
+    rect1_power = np.sqrt(rect1_power)
+    rect2_power = np.sqrt(rect2_power)
+
     # ------------------------------
     # Display rects
     # ------------------------------
     # 2x2 grid
-    _, axs = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(20, 10))
+    _, axs = plt.subplots(2, 2, figsize=(20, 10))
 
-    # Space domain 
+    # Space domain
     axs[0, 0].imshow(rect1, cmap=mpl.colormaps["gray"])
-    axs[0, 0].set_title(f"Rect {(width1, width1)}", fontsize=20)
+    axs[0, 0].set_title(f"Rect1", fontsize=20)
     axs[1, 0].imshow(rect2, cmap=mpl.colormaps["gray"])
-    axs[1, 0].set_title(f"Rect {(width2, width1)}", fontsize=20)
+    axs[1, 0].set_title(f"Rect2", fontsize=20)
 
-    # Frequency domain 
+    # Frequency domain
     axs[0, 1].imshow(rect1_power, cmap=mpl.colormaps["gray"])
-    axs[0, 1].set_title("Rect Spectrum", fontsize=20)
+    axs[0, 1].set_title("Rect1 Spectrum", fontsize=20)
     axs[1, 1].imshow(rect2_power, cmap=mpl.colormaps["gray"])
-    axs[1, 1].set_title("Rect Power Spectrum", fontsize=20)
+    axs[1, 1].set_title("Rect2 Spectrum", fontsize=20)
+
     plt.show()
 
 
 # ============================================================
-# Question 2.3
+# Question 2.1.3
 # ============================================================
-def question_2_3():
+def question_2_1_3():
     # ------------------------------
     # Parameters
     # ------------------------------
@@ -173,7 +190,7 @@ def question_2_3():
     center = (samples // 2, samples // 2)
 
     rr, cc = skimage.draw.disk(center, radius, shape=circ1.shape)
-    circ1[rr, cc] = 1  
+    circ1[rr, cc] = 1
 
     # ------------------------------
     # 2D FFT & power spectrum
@@ -187,8 +204,10 @@ def question_2_3():
     circ1_power = fftshift(circ1_power)
 
     # Normalize
-    circ1 /= circ1.max()
     circ1_power /= circ1_power.max()
+
+    # For visualization purposes ONLY
+    circ1_power = np.sqrt(circ1_power)
 
     # ------------------------------
     # Display rects
@@ -196,34 +215,32 @@ def question_2_3():
     # 1x2 grid
     _, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(20, 10))
 
-    # Space domain 
+    # Space domain
     ax[0].imshow(circ1, cmap=mpl.colormaps["gray"])
     ax[0].set_title(f"Circ", fontsize=20)
 
-    # Frequency domain 
+    # Frequency domain
     ax[1].imshow(circ1_power, cmap=mpl.colormaps["gray"])
     ax[1].set_title("Circ Spectrum", fontsize=20)
     plt.show()
-    
+
+
 # ============================================================
-# Question 2.4
+# Question 2.1.4
 # ============================================================
-def question_2_4():
+def question_2_1_4():
     # ------------------------------
     # Parameters
     # ------------------------------
-    image_path = "/home/hotpants/Pictures/carlson_logo.png"
+    image_path = "Manolakis_Models.png"
 
     # ------------------------------
     # Read image
     # ------------------------------
     image = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
-    
+
     # Crop image to square
-    image = image[:150,:150].astype(np.float64)
-    
-    # Normalize
-    image /= image.max()
+    image = image[:512, :512].astype(np.float64)
 
     # ------------------------------
     # 2D FFT & power spectrum
@@ -236,27 +253,115 @@ def question_2_4():
     # Shift 0-frequency to center
     image_power = fftshift(image_power)
 
-    # For visualizaiton purposes ONLY
-    image_power = np.log1p(image_power)
+    # Normalize
     image_power /= image_power.max()
+
+    # For visualizaiton purposes ONLY
+    image_power = np.power(image_power, 0.1)
 
     # ------------------------------
     # Display Spectrum
     # ------------------------------
     # 1x2 grid
-    _, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(20, 10))
+    fig, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(20, 10))
 
-    # Space domain 
+    # Space domain
     ax[0].imshow(image, cmap=mpl.colormaps["gray"], aspect="equal")
-    ax[0].set_title(f"Carlson Logo", fontsize=20)
+    ax[0].set_title(f"Image", fontsize=20)
 
-    # Frequency domain 
-    ax[1].imshow(image_power, cmap=mpl.colormaps["gray"], aspect="equal")
-    ax[1].set_title("Power Spectrum", fontsize=20)
+    # Frequency domain
+    ax[1].imshow(image_power, cmap=mpl.colormaps["gray"])
+    ax[1].set_title("Image Spectrum", fontsize=20)
+
+    # fig.colorbar(plt.cm.ScalarMappable(norm=mpl.colors.Normalize(0, 1), cmap=mpl.colormaps["gray"]),
+    # ax=ax, label="DC value")
     plt.show()
 
 
+# ============================================================
+# Question 2.2.1
+# ============================================================
+def question_2_2():
+    # ------------------------------
+    # Parameters
+    # ------------------------------
+    rows, cols = 512, 512
+    image_shape = (rows, cols)
+
+    # ------------------------------
+    # Load in signals / images
+    # ------------------------------
+
+    # Square
+    square = np.zeros(image_shape, dtype=np.float64)
+    square[256 - rows // 8 : 256 + rows // 8] = 1
+    
+    # Rectangle
+    rect = np.zeros(image_shape, dtype=np.float64)
+    rect[256 - rows // 16 : 256 + rows // 8] = 1
+    
+    # Circle
+    circ = np.zeros(image_shape, dtype=np.double)
+    center = (rows // 2, cols // 2)
+    radius = rows // 8
+
+    rr, cc = skimage.draw.disk(center, radius, shape=circ.shape)
+    circ[rr, cc] = 1
+    
+    # Image
+    image = cv.imread("water_tv.png", cv.IMREAD_GRAYSCALE)
+    
+    # Crop image to square
+    image = image[256:768, 512:1024].astype(np.float64)
+    
+    # ------------------------------
+    # Low pass filters
+    # ------------------------------
+    
+    r1 = rows // 2  # Half image
+    r2 = rows // 8  # Eigth image
+    r3 = rows // 32 # 32nd image
+
+    rr_1, cc_1 = skimage.draw.disk(center, r1)
+    rr_2, cc_2 = skimage.draw.disk(center, r2)
+    rr_3, cc_3 = skimage.draw.disk(center, r3)
+    
+    # ------------------------------
+    # 2D FFT's & power spectrum's
+    # ------------------------------
+    square_freq = fft2(square)
+    rect_freq = fft2(rect)
+    circle_freq = fft2(circ)
+    image_freq = fft2(image)
+    
+    square_power = np.abs(square_freq) ** 2
+    rect_power = np.abs(rect_freq) ** 2
+    circle_power = np.abs(circle_freq) ** 2
+    image_power = np.abs(image_freq) ** 2
+    
+    # ------------------------------
+    # Shift 0-frequency to center
+    # ------------------------------
+    
+    square_power = fftshift(square_power)
+    rect_power = fftshift(rect_power)
+    circle_power = fftshift(circle_power)
+    image_power = fftshift(image_power)
+    
+    # ------------------------------
+    # Apply Low-pass filters
+    # ------------------------------
+    
+    
+    # ------------------------------
+    # Inverse Transform
+    # ------------------------------
+    
+    # ------------------------------
+    # Display Reconstructed and Spectrum
+    # ------------------------------
+    
+    
+
 if __name__ == "__main__":
-    question_2_4()
-
-
+    question_2_2()
