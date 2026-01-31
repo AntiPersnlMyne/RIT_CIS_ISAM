@@ -298,7 +298,7 @@ def question_2_2():
     ] = 1
 
     # Circle
-    circ = np.zeros(image_shape, dtype=np.double)
+    circ = np.zeros(image_shape, dtype=np.float64)
     center = (rows // 2, cols // 2)
     radius = rows // 8
 
@@ -412,30 +412,31 @@ def question_2_2():
         # rows = orig, power, low-pass, reconstructed
         # cols = square, rect, circ, image
         fig, axes = plt.subplots(4, 4, figsize=(30, 25))
+        cmap = mpl.colormaps["gray"]
 
         # Originals
-        axes[0,0].imshow(square, cmap=mpl.colormaps["gray"])
-        axes[0,1].imshow(rect, cmap=mpl.colormaps["gray"])
-        axes[0,2].imshow(circ, cmap=mpl.colormaps["gray"])
-        axes[0,3].imshow(image, cmap=mpl.colormaps["gray"])
+        axes[0,0].imshow(square, cmap=cmap)
+        axes[0,1].imshow(rect, cmap=cmap)
+        axes[0,2].imshow(circ, cmap=cmap)
+        axes[0,3].imshow(image, cmap=cmap)
 
         # Original power spectrum
-        axes[1,0].imshow(square_power, cmap=mpl.colormaps["gray"])
-        axes[1,1].imshow(rect_power, cmap=mpl.colormaps["gray"])
-        axes[1,2].imshow(circ_power, cmap=mpl.colormaps["gray"])
-        axes[1,3].imshow(image_power, cmap=mpl.colormaps["gray"])
+        axes[1,0].imshow(square_power, cmap=cmap)
+        axes[1,1].imshow(rect_power, cmap=cmap)
+        axes[1,2].imshow(circ_power, cmap=cmap)
+        axes[1,3].imshow(image_power, cmap=cmap)
 
         # Low-Pass power spectrum
-        axes[2,0].imshow(square_power_lp, cmap=mpl.colormaps["gray"])
-        axes[2,1].imshow(rect_power_lp, cmap=mpl.colormaps["gray"])
-        axes[2,2].imshow(circ_power_lp, cmap=mpl.colormaps["gray"])
-        axes[2,3].imshow(image_power_lp, cmap=mpl.colormaps["gray"])
+        axes[2,0].imshow(square_power_lp, cmap=cmap)
+        axes[2,1].imshow(rect_power_lp, cmap=cmap)
+        axes[2,2].imshow(circ_power_lp, cmap=cmap)
+        axes[2,3].imshow(image_power_lp, cmap=cmap)
 
         # Reconstructed images
-        axes[3,0].imshow(square_recon, cmap=mpl.colormaps["gray"])
-        axes[3,1].imshow(rect_recon, cmap=mpl.colormaps["gray"])
-        axes[3,2].imshow(circ_recon, cmap=mpl.colormaps["gray"])
-        axes[3,3].imshow(image_recon, cmap=mpl.colormaps["gray"])
+        axes[3,0].imshow(square_recon, cmap=cmap)
+        axes[3,1].imshow(rect_recon, cmap=cmap)
+        axes[3,2].imshow(circ_recon, cmap=cmap)
+        axes[3,3].imshow(image_recon, cmap=cmap)
 
         # Set titles
         axes[0,0].set_title("Square", fontsize=20)
@@ -450,8 +451,68 @@ def question_2_2():
 # ============================================================
 # Question 2.3
 # ============================================================
+def question_2_3():
+    # ------------------------------
+    # Load in image
+    # ------------------------------
+    image = cv.imread("water_tv.png", cv.IMREAD_GRAYSCALE)
+    rows, cols = image.shape
 
+    # Crop image to square
+    image = image[256:768, 200:200+512].astype(np.float64)
+    
+    # ------------------------------
+    # Low pass filter
+    # ------------------------------
+    radius = rows // 3   # Sixteenth image
+    center = (rows//2,cols//2)
+    rr, cc = skimage.draw.disk(center, radius, shape=image.shape)
+    
+    # ------------------------------
+    # 2D FFT & low-pass power spectrum
+    # ------------------------------
+    image_freq  = fftshift(fft2(image))
+    
+    # Create mask
+    mask = np.zeros_like(image, dtype=np.float64)
+    mask[rr, cc] = 1
+    
+    # Apply filter in frequency domain
+    image_freq_lp  = image_freq * mask
+    
+    # ------------------------------
+    # Blurry Image / Inverse Transform
+    # ------------------------------
+    image_recon  = np.abs(ifft2(ifftshift(image_freq_lp)))
+    
+    # ------------------------------
+    # Sharpening
+    # ------------------------------
+    edge_map = 0.1 * image_recon
+    image_sharp = cv.addWeighted(image, 3.5, image_recon, -2.5, 0.0)
+    
+    # ------------------------------
+    # Normalize
+    # ------------------------------
+    image /= image.max()
+    edge_map /= edge_map.max()
+    image_sharp /= image_sharp.max()
+    
+    # ------------------------------
+    # Display Edge Map and Sharpening
+    # ------------------------------
+    fig, ax = plt.subplots(1, 2, figsize=(30, 25))
+    cmap = mpl.colormaps["gray"]
 
+    # Original
+    ax[0].imshow(image, cmap=cmap)
+    ax[0].set_title("Original image", fontsize=30)
+    # Edge map
+    ax[1].imshow(edge_map, cmap=cmap)
+    ax[1].set_title("Edge map", fontsize=30)
+
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
-    question_2_2()
+    question_2_3()
